@@ -19,52 +19,12 @@ public class MDCC extends DB {
 	
 	@Override
 	public int delete(String tableName, String key) {
-		if (tableName == null) {
-			return -1;
-		}
-		if (key == null) {
-			return -1;
-		}
-		Transaction t = fac.create();
-        t.begin();
-        StringBuilder str = new StringBuilder(tableName);
-        str.append("_");
-        str.append(key);
-        String theKey = str.toString();
-		try {
-			t.delete(theKey);
-			t.commit();
-		} catch (TransactionException e) {
-			System.err.println("Error in processing delete to table: " + tableName + e);
-			return -1;
-		}
 		return 0;
 	}
 
 	@Override
 	public int insert(String tableName, String key, HashMap<String, ByteIterator> values) {
-		if (tableName == null) {
-			return -1;
-		}
-		if (key == null) {
-			return -1;
-		}
-		Transaction t = fac.create();
-        t.begin();
-        StringBuilder str = new StringBuilder(tableName);
-        str.append("_");
-        str.append(key);
-        String theKey = str.toString();
-		try {
-			for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-				t.write(theKey, entry.getValue().toString().getBytes());
-			}
-			t.commit();
-		} catch (TransactionException e) {
-			System.err.println("Error in processing insert to table: " + tableName + e);
-			return -1;
-		}
-		return 0;
+		return update(tableName, key, values);
 	}
 
 	@Override
@@ -78,18 +38,19 @@ public class MDCC extends DB {
 		}
 		Transaction t = fac.create();
         t.begin();
-        StringBuilder str = new StringBuilder(tableName);
-        str.append("_");
-        str.append(key);
-        String theKey = str.toString();
 		try {
 			for (String field : fields) {
-				byte[] x = t.read(theKey);
+				StringBuilder str = new StringBuilder(tableName);
+		        str.append("_");
+		        str.append(key);
+		        str.append("_");
+		        str.append(field);
+				byte[] x = t.read(str.toString());
 				result.put(field, new StringByteIterator(x.toString()));
 			}
 			t.commit();
 		} catch (TransactionException e) {
-			System.err.println("Error in processing insert to table: " + tableName + e);
+			System.err.println("Error in processing read to table: " + tableName + e);
 			return -1;
 		}
 		return 0;
@@ -112,17 +73,18 @@ public class MDCC extends DB {
 		}
 		Transaction t = fac.create();
         t.begin();
-        StringBuilder str = new StringBuilder(tableName);
-        str.append("_");
-        str.append(key);
-        String theKey = str.toString();
 		try {
 			for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-				t.write(theKey, entry.getValue().toString().getBytes());
+				StringBuilder str = new StringBuilder(tableName);
+		        str.append("_");
+		        str.append(key);
+		        str.append("_");
+		        str.append(entry.getKey());
+				t.write(str.toString(), entry.getValue().toString().getBytes());
 			}
 			t.commit();
 		} catch (TransactionException e) {
-			System.err.println("Error in processing insert to table: " + tableName + e);
+			System.err.println("Error in processing update to table: " + tableName + e);
 			return -1;
 		}
 		return 0;
